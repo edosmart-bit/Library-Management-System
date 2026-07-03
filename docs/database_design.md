@@ -1,4 +1,3 @@
-
 # Database Design
 
 ## Project
@@ -9,9 +8,9 @@
 
 # 1. Introduction
 
-This document describes the initial database design for the Library Management System. It outlines the entities, tables, attributes, and relationships required to support the core functionalities of the application.
+This document describes the database design for the Library Management System. It outlines the entities, tables, attributes, normalization principles, and relationships required to support the core functionalities of the application.
 
-The goal of the database is to ensure data consistency, minimize redundancy, and provide efficient storage and retrieval of library information.
+The database is designed to ensure data consistency, reduce redundancy, maintain data integrity, and provide efficient storage and retrieval of library information. This document serves as the foundation for implementing the database schema in MySQL.
 
 ---
 
@@ -20,6 +19,7 @@ The goal of the database is to ensure data consistency, minimize redundancy, and
 The database should be able to:
 
 * Store information about books.
+* Store individual physical copies of books.
 * Store student records.
 * Store librarian records.
 * Track borrowing and returning of books.
@@ -33,16 +33,17 @@ The database should be able to:
 
 The following entities have been identified during the business analysis phase.
 
-| Entity         | Description                                        |
-| -------------- | -------------------------------------------------- |
-| Books          | Stores information about all books in the library. |
-| Students       | Stores student information.                        |
-| Librarians     | Stores librarian information.                      |
-| Authors        | Stores book authors.                               |
-| Categories     | Stores book categories.                            |
-| Borrow Records | Records every borrowing transaction.               |
-| Reservations   | Stores book reservation records.                   |
-| Fines          | Stores overdue fine information.                   |
+| Entity         | Description                                            |
+| -------------- | ------------------------------------------------------ |
+| Books          | Stores information about book titles.                  |
+| Book Copies    | Stores information about each physical copy of a book. |
+| Students       | Stores student information.                            |
+| Librarians     | Stores librarian information.                          |
+| Authors        | Stores book authors.                                   |
+| Categories     | Stores book categories.                                |
+| Borrow Records | Records every borrowing transaction.                   |
+| Reservations   | Stores book reservation records.                       |
+| Fines          | Stores overdue fine information.                       |
 
 ---
 
@@ -50,19 +51,29 @@ The following entities have been identified during the business analysis phase.
 
 ## 4.1 Books
 
-| Column           | Data Description           |
-| ---------------- | -------------------------- |
-| book_id          | Unique identifier          |
-| title            | Book title                 |
-| isbn             | ISBN number                |
-| publication_year | Year published             |
-| author_id        | Author reference           |
-| category_id      | Category reference         |
-| available_copies | Number of available copies |
+| Column           | Data Description          |
+| ---------------- | ------------------------- |
+| book_id          | Unique identifier         |
+| title            | Book title                |
+| isbn             | ISBN number               |
+| publication_year | Year published            |
+| author_id        | Reference to the author   |
+| category_id      | Reference to the category |
 
 ---
 
-## 4.2 Students
+## 4.2 Book Copies
+
+| Column  | Data Description                                |
+| ------- | ----------------------------------------------- |
+| copy_id | Unique identifier for a physical copy           |
+| book_id | Reference to the book title                     |
+| barcode | Unique barcode or inventory number              |
+| status  | Available, Borrowed, Reserved, Damaged, or Lost |
+
+---
+
+## 4.3 Students
 
 | Column        | Data Description           |
 | ------------- | -------------------------- |
@@ -75,18 +86,18 @@ The following entities have been identified during the business analysis phase.
 
 ---
 
-## 4.3 Librarians
+## 4.4 Librarians
 
 | Column       | Data Description  |
 | ------------ | ----------------- |
 | librarian_id | Unique identifier |
 | full_name    | Librarian name    |
-| email        | Email             |
+| email        | Email address     |
 | phone        | Phone number      |
 
 ---
 
-## 4.4 Authors
+## 4.5 Authors
 
 | Column      | Data Description   |
 | ----------- | ------------------ |
@@ -95,7 +106,7 @@ The following entities have been identified during the business analysis phase.
 
 ---
 
-## 4.5 Categories
+## 4.6 Categories
 
 | Column        | Data Description  |
 | ------------- | ----------------- |
@@ -104,13 +115,13 @@ The following entities have been identified during the business analysis phase.
 
 ---
 
-## 4.6 Borrow Records
+## 4.7 Borrow Records
 
 | Column       | Data Description           |
 | ------------ | -------------------------- |
 | borrow_id    | Unique identifier          |
 | student_id   | Student borrowing the book |
-| book_id      | Borrowed book              |
+| copy_id      | Physical copy borrowed     |
 | librarian_id | Librarian issuing the book |
 | borrow_date  | Date borrowed              |
 | due_date     | Expected return date       |
@@ -118,18 +129,18 @@ The following entities have been identified during the business analysis phase.
 
 ---
 
-## 4.7 Reservations
+## 4.8 Reservations
 
-| Column           | Data Description           |
-| ---------------- | -------------------------- |
-| reservation_id   | Unique identifier          |
-| student_id       | Student making reservation |
-| book_id          | Reserved book              |
-| reservation_date | Reservation date           |
+| Column           | Data Description               |
+| ---------------- | ------------------------------ |
+| reservation_id   | Unique identifier              |
+| student_id       | Student making the reservation |
+| book_id          | Requested book title           |
+| reservation_date | Reservation date               |
 
 ---
 
-## 4.8 Fines
+## 4.9 Fines
 
 | Column    | Data Description         |
 | --------- | ------------------------ |
@@ -146,23 +157,26 @@ The following relationships exist between the entities:
 
 * One author can write many books.
 * One category can contain many books.
-* One student can borrow many books over time.
-* One librarian can issue many books.
-* One book can appear in many borrowing records.
+* One book can have many physical copies.
+* One student can borrow many book copies over time.
+* One librarian can issue many book copies.
+* One book copy can appear in many borrowing records over its lifetime.
 * One borrowing record may generate one fine.
 * One student can reserve many books.
 * One book can have many reservations.
 
 ---
 
-# 6. Entity Relationship Diagram
+# 6. Entity Relationship Diagram (Draft)
 
 ```text
 Authors
    │
-   │
    ▼
 Books
+   │
+   ▼
+BookCopies
    │
    ▼
 BorrowRecords
@@ -192,23 +206,45 @@ Books
 
 ---
 
-# 7. Future Improvements
+# 7. Database Normalization
 
-The current database design is an initial version.
+The database design follows normalization principles to reduce redundancy and improve data consistency.
 
-Future enhancements may include:
+The design currently targets **Third Normal Form (3NF)**.
 
-* Multiple copies of the same book.
-* Multiple library branches.
-* Barcode or QR code integration.
-* Digital books (e-books).
-* User authentication tables.
-* Audit logs.
-* Book recommendation data.
-* Machine Learning datasets.
+The following normalization decisions have been made:
+
+* Each table represents a single business entity.
+* Books and physical book copies are stored separately.
+* Authors are stored independently from books.
+* Categories are stored independently from books.
+* Borrowing transactions are stored separately from student and book information.
+* Fines are linked to borrowing transactions rather than directly to students or books.
+* Relationships between tables will be maintained using primary keys and foreign keys.
+
+This design minimizes duplicate data and simplifies future maintenance and expansion.
 
 ---
 
-# 8. Conclusion
+# 8. Future Improvements
 
-This document presents the initial database design for the Library Management System. It serves as the foundation for implementing the database schema in MySQL and will evolve as new requirements are identified during development.
+As the project grows, the database may be extended to include:
+
+* Multiple library branches.
+* Publisher information.
+* Book editions.
+* Digital books (e-books).
+* User authentication and role management.
+* Barcode or QR code scanning.
+* Audit logs.
+* Notifications and email reminders.
+* Machine Learning datasets.
+* Recommendation history.
+
+---
+
+# 9. Conclusion
+
+This document presents Version 2 of the database design for the Library Management System.
+
+The design has been improved through normalization by separating book titles from physical book copies. It provides a scalable and maintainable foundation for implementing the database schema in MySQL and will continue to evolve as new project requirements emerge.
