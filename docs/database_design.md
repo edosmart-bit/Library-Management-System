@@ -222,7 +222,7 @@ The following normalization decisions have been made:
 * Fines are linked to borrowing transactions rather than directly to students or books.
 * Relationships between tables will be maintained using primary keys and foreign keys.
 
-This design minimizes duplicate data and simplifies future maintenance and expansion.
+
 
 ---
 
