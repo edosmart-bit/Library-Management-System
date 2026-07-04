@@ -167,7 +167,7 @@ The following relationships exist between the entities:
 
 ---
 
-# 6. Entity Relationship Diagram (Draft)
+# 6. Entity Relationship Diagram 
 
 ```text
 Authors
